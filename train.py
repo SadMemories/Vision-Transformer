@@ -14,7 +14,7 @@ from vit import vit_base_patch16_224
 from torch.utils.tensorboard import SummaryWriter
 
 
-def train_one_epoch(model, optimizer, train_dataloader, device, epoch):
+def train_one_epoch(model, optimizer, train_dataloader, device, epoch, max_grad_norm):
 
     correct_num = 0
     total_num = 0
@@ -39,6 +39,9 @@ def train_one_epoch(model, optimizer, train_dataloader, device, epoch):
 
         loss.backward()
         total_loss += loss.item()
+
+        # 加了之后在10个epoch效果不如不加的
+        # nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
 
         data_loader.desc = "[train epoch {}] loss: {:.3f}, acc: {:.3f}".format(epoch,
                                                                                total_loss / (step + 1),
@@ -137,7 +140,8 @@ def train(args):
 
     for epoch in range(args.epochs):
 
-        train_loss, train_acc = train_one_epoch(model, optimizer, train_dataloader, device, epoch)
+        train_loss, train_acc = train_one_epoch(model, optimizer, train_dataloader,
+                                                device, epoch, args.max_grad_norm)
         scheduler.step()
 
         valid_loss, valid_acc = valid_one_epoch(model, valid_dataloader, device, epoch)
@@ -165,5 +169,6 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--lrf', default=0.01, type=float)
     parser.add_argument('--epochs', type=int, default=10)
+    parser.add_argument('--max_grad_norm', type=float, default=1.0)
     opt = parser.parse_args()
     train(opt)
