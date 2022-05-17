@@ -63,13 +63,14 @@ class MyDataset(Dataset):
         return len(self.img_label_list)
 
     def __getitem__(self, item):
-        image = Image.open(self.img_path_list[item])
+        image = Image.open(self.img_path_list[item]).convert('RGB')
         label = self.img_label_list[item]
 
         if self.transform:
             image = self.transform(image)
         return image, label
 
+    # 测试发现不使用自己写的collate_fn也可以正常输出
     @staticmethod
     def collate_fn(batch):
         imgs, labels = zip(*batch)
